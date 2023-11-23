@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+{% include("cabecera.html") %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservacion</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <style>
+        body {background-color: #e8b542; /* color de fondo pagina */}
+        .text-primary { color: #e8b542; } 
+        .text-center { text-align: center; }
+        .mb-5 { margin-bottom: 5rem; }
+        .container { background-color: #c90302; }
+        .card { background-color: #a4a4a4; box-shadow: 0px 0px 10px #a4a4a4; }
+        .form-control { width: 100%; } /* Establecer ancho fijo para todas las barras de entrada */
+        .btn-primary { background-color: #c90302; border-color: #a4a4a4; }
+        .btn-danger { background-color: #c90302; border-color: #a4a4a4; }
+        .btn-danger:hover { background-color: #a4a4a4; border-color: #a4a4a4; }
+        .table-gris { background-color: #e8b542; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+</head>
+<body>
+  <h1 class="text-center mt-5 mb-5 text">Reservaciones de Establecimiento</h1>  
+
+  <div class="container">
+    <div class="card shadow">
+        <div class="card-body">
+            <div data-bs-theme="dark" class="d-flex">
+                <div>Reservaciones Establecimiento</div>
+            </div>
+        </div>
+        <form action="/userlocal" method="POST">
+            <div class="row mb-3">
+                <div class="col-3 form-floating">
+                    <input type="text" class="form-control" id="floatingInput" placeholder="nombre"  name="nombres">
+                    <label for="floatingInput">Nombres</label>
+                </div>
+                <div class="col-3 form-floating">
+                    <input type="text" class="form-control" id="floatingInput" placeholder="apellido" name="apellidos">
+                    <label for="floatingInput">Apellidos</label> 
+                </div>
+                <div class="col-3 form-floating">
+                    <input type="text" class="form-control" id="floatingInput" placeholder="DUI" name="DUI">
+                    <label for="floatingInput">DUI</label> 
+                </div>
+                <div class="col-3 form-floating">
+                    <input type="text" class="form-control mb-3" id="floatingInput" placeholder="telefono" name="telefono">
+                    <label for="floatingInput">Telefono</label> 
+                </div>
+                <div class="col-3 form-floating">
+                    <select class="form-select mb-3" name="t_reservacion">
+                        <option value="Local">Local</option>
+                        <option value="Extras">Extras</option>
+                    </select>
+                    <label for="floatingInput">Tipo de Reservacion</label>
+                </div>
+                
+                <div class="col-3 form-floating">
+                    <input type="date" class="form-control" id="floatingInput" placeholder="fecha" name="fecha">
+                    <label for="floatingInput">Fecha a Rentar</label> 
+                </div>
+
+                <div class="col-3 form-floating">
+                    <input type="text" class="form-control mb-3" id="floatingInput" placeholder="total" name="total">
+                    <label for="floatingInput">Total</label> 
+                </div>
+
+                <div class="col-3 form-floating">
+                    <select class="form-select mb-3" name="pago">
+                        <option value="Pagado">Pagado</option>
+                        <option value="Pendiente">Pendiente</option>
+                    </select>
+                    <label for="floatingInput">Pago</label>
+                </div>
+
+                <div class="col">
+                    <button class="btn btn-primary mb-3 mt-4" type="submit">Guardar</button>
+                </div>
+
+            </div>
+        </form>
+        
+        <table class="table table-bordered table-gris">
+            <thead>
+                <th scope="col" class="text">#</th>
+                <th scope="col" class="text">Nombre</th>
+                <th scope="col" class="text">Apellido</th>
+                <th scope="col" class="text">DUI</th>
+                <th scope="col" class="text">Telefono</th>
+                <th scope="col" class="text">Tipo de Reservacion</th>
+                <th scope="col" class="text">Fecha</th>
+                <th scope="col" class="text">Total</th>
+                <th scope="col" class="text">Pago</th>
+                <th scope="col" class="text">Editar</th>
+                <th scope="col" class="text">Eliminar</th>
+            </thead>
+        
+            <tbody>
+                {% for d in data %}
+                <tr>
+                    <td>{{d.id}}</td>
+                    <td>{{d.nombres}}</td>
+                    <td>{{d.apellidos}}</td>
+                    <td>{{d.DUI}}</td>
+                    <td>{{d.telefono}}</td>
+                    <td>{{d.t_reservacion}}</td>
+                    <td>{{d.fecha}}</td>
+                    <td>{{d.total}}</td>
+                    <td>{{d.pago}}</td>
+                    
+                    
+                    <td><button class="btn btn-primary btn-sm" id="btn-edit{{d.id}}" data-bs-toggle="modal" data-bs-target="#modal{{d.id}}">Editar</button></td>
+                    <td><a href="{{ url_for('deletelocal', id=d.id) }}" class="btn btn-danger btn-sm">Eliminar</a></td>
+                </tr>
+                <!-- Modal -->
+                <div class="modal fade" id="modal{{d.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5 text-primary" id="exampleModalLabel">{{d.nombre}}</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="/editlocal/{{d.id}}" method="post">
+                                    <div class="col-3">
+                                        <label class="text-primary">Nombre</label>
+                                        <input type="text" class="form-control mb-3" name="nombres" value="{{d.nombres}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text-primary" >Apellido</label>
+                                        <input type="text" class="form-control mb-3" name="apellidos" value="{{d.apellidos}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text-primary">DUI</label>
+                                        <input type="text" class="form-control mb-3" name="DUI" value="{{d.DUI}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text-primary">Telefono</label>
+                                        <input type="text" class="form-control mb-3" name="telefono" value="{{d.telefono}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text">Tipo de Reservacion</label>
+                                        <select class="form-select mb-3" name="t_reservacion">
+                                            <option value="Local">Local</option>
+                                            <option value="Extras">Extras</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text-primary">Fecha</label>
+                                        <input type="date" class="form-control mb-3" name="fecha" value="{{d.fecha}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text-primary">Total</label>
+                                        <input type="text" class="form-control mb-3" name="total" value="{{d.total}}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="text">Pago</label>
+                                        <select class="form-select mb-3" name="pago">
+                                            <option value="Pagado">Pagado</option>
+                                            <option value="Pendiente">Pendiente</option>
+                                        </select>
+                                    </div>
+                                  
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endfor%}
+            </tbody>
+        </table>
+    </div>
+  </div>
+</body>
+</html>
