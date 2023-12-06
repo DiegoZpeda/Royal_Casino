@@ -1,14 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, flash, url_for, session
 import os
 import database as db
 from flask_mysqldb import MySQL,MySQLdb
+
 
 
 template_dir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 template_dir = os.path.join(template_dir, 'src', 'templates')
 
 app = Flask(__name__, template_folder=template_dir)
-
+app.config['SECRET_KEY'] = 'mi_clave_secreta'
 
 IMG_FOLDER = os.path.join("src", "static", "img")
 app.config["UPLOAD_FOLDER"] = IMG_FOLDER 
@@ -20,10 +21,14 @@ def Display_IMG():
     Logo = os.path.join(app.config["UPLOAD_FOLDER"], "logo.png")
     return render_template("login.html",user_image = Logo)
 
+@app.route('/mostrar_alerta')
+def mostrar_alerta():
+    flash('¡Esa Fecha ya esta ocupada!','info')
+    return redirect(url_for('rmms'))
 
-
-
- 
+def mostrar_alerta2():
+    flash('¡Esa Fecha ya esta ocupada!')
+    return redirect(url_for('r_local'))
 
 @app.route('/cabecera')
 def cabecera():
@@ -32,6 +37,12 @@ def cabecera():
 @app.route('/index')
 def index():
     return render_template('index.html') 
+
+inventario = {
+    'sillas': 200,
+    'mesas': 50,
+    'manteles': 50
+}
 
 
 #---------------------------------------------------------------------------
@@ -47,7 +58,7 @@ def rmms():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('rmms.html', data=insertObject)
+    return render_template('rmms.html', data=insertObject, inventario=inventario)
 
 @app.route('/user', methods=['POST'])
 def addUser():
@@ -62,15 +73,44 @@ def addUser():
     c_manteles = request.form['c_manteles']
     total = request.form['total']
     pago = request.form['pago']
+    p_pendiente = request.form['pago']
     
-    if t_reservacion and nombres and apellidos and DUI and telefono and fecha and c_mesas and c_sillas and c_manteles and total and pago:
+    cursor = db.database.cursor()
+    Cnombre = DUI
+    select_query = "SELECT DUI, c_reservaciones FROM clientes WHERE DUI = %s"
+    cursor.execute(select_query, (Cnombre,))
+    result = cursor.fetchone()
+    
+    consulta = "SELECT * FROM rmms WHERE fecha = %s"
+    valores = (fecha,)
+    cursor.execute(consulta, valores)
+    resultado = cursor.fetchone()
+    #Rmms
+    if resultado:
+        mostrar_alerta  
+       
+    else:
+        if result:
+            NID, cantidad = result
+            Ncantidad = cantidad + 1
+            update_query = "UPDATE clientes SET c_reservaciones = %s WHERE DUI = %s"
+            cursor.execute(update_query, (Ncantidad, NID,))
+            db.database.commit()
+            
+        elif t_reservacion and nombres and apellidos and DUI and telefono and fecha and c_mesas and c_sillas and c_manteles and total and pago:
+            cursor = db.database.cursor()
+            sql = "INSERT INTO clientes (nombres, apellidos, DUI, telefono, p_pendiente, c_reservaciones) VALUES (%s, %s, %s, %s, %s, 1)"
+            data = (nombres, apellidos, DUI, telefono, p_pendiente )
+            cursor.execute(sql, data)
+            db.database.commit()
+            
         cursor = db.database.cursor()
         sql = "INSERT INTO rmms (t_reservacion, nombres, apellidos, DUI, telefono, fecha, c_mesas, c_sillas, c_manteles, total, pago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
         data = (t_reservacion, nombres, apellidos, DUI, telefono, fecha, c_mesas, c_sillas, c_manteles, total, pago)
         cursor.execute(sql, data)
-        db.database.commit()
+        db.database.commit() 
     return redirect(url_for('rmms'))
+    
 
 @app.route('/delete/<string:id>')
 def delete(id):
@@ -107,18 +147,31 @@ def edit(id):
     
 #--------------------------------------------------------------------
 #r_local
-
 @app.route('/r_local')
 def local():
+    search_term = request.args.get('search', '')  # Obtener el término de búsqueda de la URL
     cursor = db.database.cursor()
-    cursor.execute("SELECT * FROM r_local")
+
+    if search_term:
+        # Filtrar resultados si hay un término de búsqueda
+        sql = "SELECT * FROM r_local WHERE nombres LIKE %s "
+        data = ('%' + search_term + '%', '%' + search_term + '%')
+        cursor.execute(sql, data)
+    else:
+        # Consulta sin filtrar si no hay término de búsqueda
+        cursor.execute("SELECT * FROM r_local")
+
     myresult = cursor.fetchall()
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
+    
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
+
     cursor.close()
-    return render_template('r_local.html', data=insertObject)
+    return render_template('r_local.html', data=insertObject, search_term=search_term, inventario=inventario)
+
+
 
 @app.route('/userlocal', methods=['POST'])
 def addUserlocal():
@@ -127,17 +180,49 @@ def addUserlocal():
     DUI = request.form['DUI']
     telefono = request.form['telefono']
     t_reservacion = request.form['t_reservacion']
+    c_mesas = request.form['c_mesas']
+    c_sillas = request.form['c_sillas']
+    c_manteles = request.form['c_manteles']
     fecha = request.form['fecha']
     total = request.form['total']
     pago = request.form['pago']
+    p_pendiente = request.form['pago']
     
+    cursor = db.database.cursor()
+    Cnombre = DUI
+    select_query = "SELECT DUI, c_reservaciones FROM clientes WHERE DUI = %s"
+    cursor.execute(select_query, (Cnombre,))
+    result = cursor.fetchone()
     
-    if nombres and apellidos and DUI and telefono and t_reservacion and fecha and total and pago :
+    consulta = "SELECT * FROM r_local WHERE fecha = %s"
+    valores = (fecha,)
+    cursor.execute(consulta, valores,)
+    resultado = cursor.fetchone()
+    
+    #R_local
+    if resultado:
+       resultado = mostrar_alerta2    
+    else:        
+        if result:
+            NID, cantidad = result
+            Ncantidad = cantidad + 1
+            update_query = "UPDATE clientes SET c_reservaciones = %s WHERE DUI = %s"
+            cursor.execute(update_query, (Ncantidad, NID,))
+            db.database.commit()
+            
+        elif nombres and apellidos and DUI and telefono and t_reservacion and fecha and total and pago and p_pendiente: 
+            cursor = db.database.cursor()
+            sql = "INSERT INTO clientes (nombres, apellidos, DUI, telefono, p_pendiente, c_reservaciones) VALUES (%s, %s, %s, %s, %s, 1)"
+            data = (nombres, apellidos, DUI, telefono, p_pendiente )
+            cursor.execute(sql, data)
+            db.database.commit()
+        
         cursor = db.database.cursor()
-        sql = "INSERT INTO r_local (nombres, apellidos, DUI, telefono, t_reservacion, fecha, total, pago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        data = (nombres, apellidos, DUI, telefono, t_reservacion, fecha, total, pago)
+        sql = "INSERT INTO r_local (nombres, apellidos, DUI, telefono, t_reservacion, c_mesas, c_sillas, c_manteles, fecha, total, pago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        data = (nombres, apellidos, DUI, telefono, t_reservacion, c_mesas, c_sillas, c_manteles, fecha, total, pago)
         cursor.execute(sql, data)
-        db.database.commit()
+        db.database.commit() 
+        del resultado
     return redirect(url_for('local'))
 
 @app.route('/deletelocal/<string:id>')
@@ -147,6 +232,8 @@ def deletelocal(id):
     data = (id,)
     cursor.execute(sql, data)
     db.database.commit()
+    
+    
     return redirect(url_for('local'))
 
 @app.route('/editlocal/<string:id>', methods=['POST'])
