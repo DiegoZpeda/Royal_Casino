@@ -57,11 +57,6 @@
 </head>
 <body>
   <h1 class="text-center mt-5 mb-5 text">Reservaciones de Establecimiento</h1>  
-{% if success %}
-  <p style="color: green;">{{ message }}</p>
-{% else %}
-  <p style="color: red;">{{ message }}</p>
-{% endif %}
   <div class="container">
     <div class="card shadow">
         <div class="card-body">
@@ -134,6 +129,7 @@
                 <div class="col-3 form-floating">
                     <select class="form-select mb-3" name="pago">
                         <option value="Local"></option>
+                        <option value="Inventario Devuelto">Inventario Devuelto</option>
                         <option value="Pagado">Pagado</option>
                         <option value="Pendiente">Pendiente</option>
                     </select>
@@ -219,8 +215,9 @@
                                     <div class="col-3">
                                         <label class="text">Tipo de Reservacion</label>
                                         <select class="form-select mb-3" name="t_reservacion">
-                                            <option value="Local">Local</option>
-                                            <option value="Extras">Extras</option>
+                                            <option value="Local">Planta Alta $125</option>
+                                            <option value="Extras">Planta baja $150</option>
+                                            <option value="Extras">Local Completo $225 </option>
                                         </select>
                                     </div>
                                     <div class="col-3">
@@ -249,7 +246,8 @@
                                     </div>
                                     <div class="col-3">
                                         <label class="text">Pago</label>
-                                        <select class="form-select mb-3" name="pago">
+                                        <select class="form-select mb-3" name="pago" value="{{d.pago}}">
+                                            <option value="Inventario Devuelto">Inventario Devuelto</option>
                                             <option value="Pagado">Pagado</option>
                                             <option value="Pendiente">Pendiente</option>
                                         </select>

@@ -38,7 +38,7 @@ def cabecera():
 def index():
     return render_template('index.html') 
 
-def modificar_inventario(nombre_articulo, cantidad):
+def modificar_inventario(nombre_articulo, cantidad, devolver=False):
     try:
         cursor = db.database.cursor()
 
@@ -47,7 +47,10 @@ def modificar_inventario(nombre_articulo, cantidad):
         current_quantity = cursor.fetchone()[0]
 
         # Realizar la operación de suma o resta
-        new_quantity = current_quantity + cantidad
+        if devolver:
+            new_quantity = current_quantity + cantidad
+        else:
+            new_quantity = current_quantity - cantidad
 
         # Actualizar la cantidad en el inventario
         cursor.execute("UPDATE inventario SET cantidad = %s WHERE nombre = %s", (new_quantity, nombre_articulo))
@@ -153,8 +156,8 @@ def edit(id):
 
     if t_reservacion and nombres and apellidos and DUI and telefono and fecha and c_mesas and c_sillas and c_manteles and total and pago:
         cursor = db.database.cursor()
+        
         sql = "UPDATE rmms SET t_reservacion=%s, nombres=%s, apellidos=%s, Dui=%s, telefono=%s, fecha=%s, c_mesas=%s, c_sillas=%s, c_manteles=%s, total=%s, pago=%s WHERE id=%s"
-
         data = (t_reservacion, nombres, apellidos, DUI, telefono, fecha, c_mesas, c_sillas, c_manteles, total, pago,id)
         cursor.execute(sql, data)
         db.database.commit()
@@ -224,11 +227,7 @@ def addUserlocal():
     cursor.execute(consulta, valores,)
     resultado = cursor.fetchone()
     
-    cursor = db.database.cursor()
-    Cnombre = DUI
-    select_query = "SELECT DUI, c_reservaciones FROM clientes WHERE DUI = %s"
-    cursor.execute(select_query, (Cnombre,))
-    result = cursor.fetchone()
+    
     #R_local
     
     if resultado:
@@ -248,9 +247,9 @@ def addUserlocal():
             cursor.execute(sql, data)
             db.database.commit()
         
-        modificar_inventario('mesas', -int(c_mesas))
-        modificar_inventario('sillas', -int(c_sillas))
-        modificar_inventario('manteles', -int(c_manteles))
+        modificar_inventario('mesas', int(c_mesas))
+        modificar_inventario('sillas', int(c_sillas))
+        modificar_inventario('manteles', int(c_manteles))
         
         cursor = db.database.cursor()
         sql = "INSERT INTO r_local (nombres, apellidos, DUI, telefono, t_reservacion, c_mesas, c_sillas, c_manteles, fecha, total, pago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
@@ -277,6 +276,9 @@ def editlocal(id):
     DUI = request.form['DUI']
     telefono = request.form['telefono']
     t_reservacion = request.form['t_reservacion']
+    c_mesas = request.form['c_mesas']
+    c_sillas = request.form['c_sillas']
+    c_manteles = request.form['c_manteles']
     fecha = request.form['fecha']
     total = request.form['total']
     pago = request.form['pago']
@@ -284,6 +286,9 @@ def editlocal(id):
 
     if nombres and apellidos and DUI and telefono and t_reservacion and fecha and total and pago :
         cursor = db.database.cursor()
+        modificar_inventario('mesas', int(c_mesas), devolver=True)
+        modificar_inventario('sillas', int(c_sillas), devolver=True)
+        modificar_inventario('manteles', int(c_manteles), devolver=True)
         sql = "UPDATE r_local SET nombres=%s, apellidos=%s, DUI=%s, telefono=%s, t_reservacion=%s, fecha=%s, total=%s, pago=%s WHERE id=%s"
         data = (nombres, apellidos, DUI, telefono, t_reservacion, fecha, total, pago, id)
         cursor.execute(sql, data)
