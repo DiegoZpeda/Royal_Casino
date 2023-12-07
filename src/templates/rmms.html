@@ -37,23 +37,40 @@
   <div class="container">
     <div class="card shadow">
         <div class="card-body">
-            <div data-bs-theme="dark" class="d-flex">
-                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Inventario</button>
-
-                <div class="offcanvas " data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Inventario</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-theme="dark" aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body">
-                    <ul>
-                        <li>Sillas: {{ inventario['sillas'] }}</li>
-                        <li>Mesas: {{ inventario['mesas'] }}</li>
-                        <li>Manteles: {{ inventario['manteles'] }}</li>
-                    </ul>
-                </div>
-                </div>
-            </div>
+            <table class="table table-bordered table-gris">
+                <thead>
+                    <th scope="col" class="text">#</th>
+                    <th scope="col" class="text">TipoReservacion</th>
+                    <th scope="col" class="text">Nombres</th>
+                    <th scope="col" class="text">Apellidos</th>
+                    <th scope="col" class="text">DUI</th>
+                    <th scope="col" class="text">Telefono</th>
+                    <th scope="col" class="text">Fecha</th>
+                    <th scope="col" class="text">Cantidad Mesas</th>
+                    <th scope="col" class="text">Cantidad Sillas</th>
+                    <th scope="col" class="text">Cantidad Manteles</th>
+                    <th scope="col" class="text">Total</th>
+                    <th scope="col" class="text">Pago</th>
+                    <th scope="col" class="text">Editar</th>
+                    <th scope="col" class="text">Eliminar</th>
+                </thead>
+            {% for d in data %}
+                <tr>
+                    <td>{{d.id}}</td>
+                    <td>{{d.t_reservacion}}</td>
+                    <td>{{d.nombres}}</td>
+                    <td>{{d.apellidos}}</td>
+                    <td>{{d.DUI}}</td>
+                    <td>{{d.telefono}}</td>
+                    <td>{{d.fecha}}</td>
+                    <td>{{d.c_mesas}}</td>
+                    <td>{{d.c_sillas}}</td>
+                    <td>{{d.c_manteles}}</td>
+                    <td>{{d.total}}</td>
+                    <td>{{d.pago}}</td>
+                </tr>
+            {% endfor%}
+            </table>
         </div>
         <form action="/user" method="POST">
             <div class="row mb-3">

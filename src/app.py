@@ -38,11 +38,26 @@ def cabecera():
 def index():
     return render_template('index.html') 
 
-inventario = {
-    'sillas': 200,
-    'mesas': 50,
-    'manteles': 50
-}
+def modificar_inventario(nombre_articulo, cantidad):
+    try:
+        cursor = db.database.cursor()
+
+        # Obtener la cantidad actual del artículo en el inventario
+        cursor.execute("SELECT cantidad FROM inventario WHERE nombre = %s", (nombre_articulo,))
+        current_quantity = cursor.fetchone()[0]
+
+        # Realizar la operación de suma o resta
+        new_quantity = current_quantity + cantidad
+
+        # Actualizar la cantidad en el inventario
+        cursor.execute("UPDATE inventario SET cantidad = %s WHERE nombre = %s", (new_quantity, nombre_articulo))
+        db.database.commit()
+
+        cursor.close()
+
+        return True, f"Inventario actualizado para {nombre_articulo}: Cantidad actual: {new_quantity}"
+    except Exception as e:
+        return False, f"Error al actualizar el inventario para {nombre_articulo}: {str(e)}"
 
 
 #---------------------------------------------------------------------------
@@ -58,7 +73,7 @@ def rmms():
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
     cursor.close()
-    return render_template('rmms.html', data=insertObject, inventario=inventario)
+    return render_template('rmms.html', data=insertObject)
 
 @app.route('/user', methods=['POST'])
 def addUser():
@@ -151,7 +166,7 @@ def edit(id):
 def local():
     search_term = request.args.get('search', '')  # Obtener el término de búsqueda de la URL
     cursor = db.database.cursor()
-
+    
     if search_term:
         # Filtrar resultados si hay un término de búsqueda
         sql = "SELECT * FROM r_local WHERE nombres LIKE %s "
@@ -161,15 +176,25 @@ def local():
         # Consulta sin filtrar si no hay término de búsqueda
         cursor.execute("SELECT * FROM r_local")
 
+
     myresult = cursor.fetchall()
     insertObject = []
     columnNames = [column[0] for column in cursor.description]
     
     for record in myresult:
         insertObject.append(dict(zip(columnNames, record)))
+        
+    #Inventario    
+    cursor.execute("SELECT * FROM inventario")
+    result_otra_tabla = cursor.fetchall()
+    insertObject_otra_tabla = []
+    columnNames_otra_tabla = [column[0] for column in cursor.description]
 
+    for record in result_otra_tabla:
+        insertObject_otra_tabla.append(dict(zip(columnNames_otra_tabla, record)))
     cursor.close()
-    return render_template('r_local.html', data=insertObject, search_term=search_term, inventario=inventario)
+    
+    return render_template('r_local.html', data=insertObject, search_term=search_term, data2 = insertObject_otra_tabla )
 
 
 
@@ -199,7 +224,13 @@ def addUserlocal():
     cursor.execute(consulta, valores,)
     resultado = cursor.fetchone()
     
+    cursor = db.database.cursor()
+    Cnombre = DUI
+    select_query = "SELECT DUI, c_reservaciones FROM clientes WHERE DUI = %s"
+    cursor.execute(select_query, (Cnombre,))
+    result = cursor.fetchone()
     #R_local
+    
     if resultado:
        resultado = mostrar_alerta2    
     else:        
@@ -217,6 +248,10 @@ def addUserlocal():
             cursor.execute(sql, data)
             db.database.commit()
         
+        modificar_inventario('mesas', -int(c_mesas))
+        modificar_inventario('sillas', -int(c_sillas))
+        modificar_inventario('manteles', -int(c_manteles))
+        
         cursor = db.database.cursor()
         sql = "INSERT INTO r_local (nombres, apellidos, DUI, telefono, t_reservacion, c_mesas, c_sillas, c_manteles, fecha, total, pago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         data = (nombres, apellidos, DUI, telefono, t_reservacion, c_mesas, c_sillas, c_manteles, fecha, total, pago)
@@ -232,7 +267,6 @@ def deletelocal(id):
     data = (id,)
     cursor.execute(sql, data)
     db.database.commit()
-    
     
     return redirect(url_for('local'))
 
@@ -260,9 +294,6 @@ def editlocal(id):
 #login
 
 cursor = db.database.cursor()
-
-
-
 @app.route('/acceso-login', methods=['POST'])
 def login_post():
     correo = request.form['txtCorreo']
